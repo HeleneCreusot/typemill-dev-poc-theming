@@ -1,12 +1,12 @@
 {% extends 'layouts/layoutAuth.twig' %}
 
-{% block title %}Login{% endblock %}
+{% block title %}{{ translate('Password Recovery Confirmation') }}{% endblock %}
 
 {% block content %}
 
-	<div class="lg:flex-row flex flex-col-reverse justify-end">
+	<div class="flex flex-col-reverse min-h-screen justify-end {{ authpagestacked ? '' : 'lg:flex-row lg:min-h-0' }}">
 		
-		<div class="lg:w-1/2 bg-teal-600 text-white min-h-screen flex justify-center items-center">
+		<div class="flex-1 flex justify-center items-center {{ authpagestacked ? 'w-full' : 'lg:w-1/2 lg:flex-none lg:min-h-screen' }}" style="background-color: {{ authpagebgcolor|default('#0d9488') }}; color: {{ authpagetextcolor|default('#ffffff') }};">
 			<div class="max-w-md content-center">
 			
 				<div class="my-2">
@@ -16,13 +16,13 @@
 			</div>
 		</div>
 		
-		<div class="lg:w-1/2 lg:bg-white lg:text-black p-5 bg-teal-600 text-white border-b border-white content-center flex justify-center items-center">
+		<div class="p-5 border-b border-white content-center flex justify-center items-center auth-right-side {{ authpagestacked ? 'w-full' : 'lg:w-1/2' }}">
 
-			<div class="max-w-md content-center">
+			<div class="max-w-md content-center {{ authpagestacked ? 'text-center' : '' }}">
 				<h1 class="text-4xl py-5">{{ title|e }}</h1>
 				<p>{{ message|e }}</p>
-				<p><a 	href="{{ url_for("auth.login") }}"
-						class="block w-full mt-6 px-3 py-3 font-medium text-center text-xs leading-tight uppercase bg-teal-600 text-white pointer hover:bg-teal-700 cursor-pointer focus:outline-none focus:ring-0 transition duration-100 ease-in-out"
+				<p><a 		href="{{ url_for("auth.login") }}"
+						class="block mt-6 px-3 py-3 font-medium text-center text-xs leading-tight uppercase"
 						>{{ translate('go to login') }}</a></p>
 			</div>
 		

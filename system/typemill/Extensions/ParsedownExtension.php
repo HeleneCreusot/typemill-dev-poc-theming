@@ -931,6 +931,26 @@ class ParsedownExtension extends \ParsedownExtra
         return false;        
     }
 
+    protected function sanitizeUrl($url)
+    {
+        # respect Parsedown's whitelist plus user-defined schemes from urlschemes setting
+        foreach ($this->safeLinksWhitelist as $safeScheme)
+        {
+            if (self::striAtStart($url, $safeScheme))
+            {
+                return $url;
+            }
+        }
+
+        # block any other URL with a dangerous scheme (e.g. javascript:, vbscript:, data:text/html)
+        if (parse_url($url, PHP_URL_SCHEME) !== null)
+        {
+            return '#';
+        }
+
+        return $url;
+    }
+
     protected function inlineLink($Excerpt)
     {
         $Element = array(
@@ -977,7 +997,9 @@ class ParsedownExtension extends \ParsedownExtra
                 $href = $this->baseUrl . '/' . $href;
             }
             # end typemill
-            
+
+            $href = $this->sanitizeUrl($href);
+
             $Element['attributes']['href'] = $href;
 
             if (isset($matches[2]))
@@ -1008,7 +1030,7 @@ class ParsedownExtension extends \ParsedownExtra
 
             $Definition = $this->DefinitionData['Reference'][$definition];
 
-            $Element['attributes']['href'] = $Definition['url'];
+            $Element['attributes']['href'] = $this->sanitizeUrl($Definition['url']);
             $Element['attributes']['title'] = $Definition['title'];
         }
 

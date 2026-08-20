@@ -54,7 +54,8 @@ class ControllerApiGlobals extends Controller
 	public function getNavigation(Request $request, Response $response, $args)
 	{
 		$params 			= $request->getQueryParams();
-
+		$userrole 			= $request->getAttribute('c_userrole');
+		$username 			= $request->getAttribute('c_username');
 		$urlinfo 			= $this->c->get('urlinfo');
 		$langattr 			= $this->settings['langattr'];
 		$navigation 		= new Navigation();
@@ -68,6 +69,16 @@ class ControllerApiGlobals extends Controller
 
 		if(isset($params['draft']) && $params['draft'] == true)
 		{
+			#check rights to view draft navigation
+			if(!$this->userroleIsAllowed($userrole, 'content', 'read'))
+			{
+				$response->getBody()->write(json_encode([
+					'message' 	=> Translations::translate('You do not have enough rights.'),
+				]));
+
+				return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+			}
+
 			$contentnavi   	= $navigation->getFullDraftNavigation($urlinfo, $langattr);
 		}
 		else
@@ -151,6 +162,8 @@ class ControllerApiGlobals extends Controller
 			return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
 		}
 
+# we have to check if user is allowed to see, e.g. if not published?
+
 		$response->getBody()->write(json_encode([
 			'item'		=> $item
 		]));
@@ -176,16 +189,17 @@ class ControllerApiGlobals extends Controller
 
 		$urlinfo 			= $this->c->get('urlinfo');
 		$langattr 			= $this->settings['langattr'];
-		$url 				= $params['url'];
+		$slug 				= $params['slug'];
 
 		$navigation 		= new Navigation();
-		$url 				= $navigation->removeEditorFromUrl($url);
-		if($url)
+
+		$project 			= $params['project'] ?? null;
+		if($project)
 		{
-			$navigation->setProject($this->settings, $url, $dispatcher = false);
+			$navigation->setProject($this->settings, $project, $dispatcher = false);
 		}
 
-		$item 				= $navigation->getItemForUrl($url, $urlinfo, $langattr);
+		$items 				= $navigation->getItemsForSlug($slug, $urlinfo, $langattr);
 		if(!$items)
 		{
 			$response->getBody()->write(json_encode([
@@ -194,6 +208,8 @@ class ControllerApiGlobals extends Controller
 
 			return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
 		}
+
+## we have to check if item is published and user allowed to see?
 
 		$response->getBody()->write(json_encode([
 			'items'		=> $items
@@ -221,6 +237,8 @@ class ControllerApiGlobals extends Controller
 		$urlinfo 			= $this->c->get('urlinfo');
 		$langattr 			= $this->settings['langattr'];
 		$url 				= $params['url'];
+		$userrole 			= $request->getAttribute('c_userrole');
+		$username 			= $request->getAttribute('c_username');		
 
 		$navigation 		= new Navigation();
 		$url 				= $navigation->removeEditorFromUrl($url);
@@ -242,10 +260,10 @@ class ControllerApiGlobals extends Controller
 		# if user is not allowed to perform this action (e.g. not admin)
 		if(!$this->userroleIsAllowed($request->getAttribute('c_userrole'), 'content', 'read'))
 		{
-			# then check if user is the owner of this content
+			# then check if user is allowed to see content
 			$meta = new Meta();
 			$metadata = $meta->getMetaData($item);
-			if(!$this->userIsAllowed($request->getAttribute('c_username'), $metadata))
+			if(!$this->contentIsAllowed($request->getAttribute('c_username'), $request->getAttribute('c_userrole'), $metadata))
 			{
 				$response->getBody()->write(json_encode([
 					'message' 	=> Translations::translate('You do not have enough rights.'),
@@ -261,6 +279,15 @@ class ControllerApiGlobals extends Controller
 
 		if(isset($params['draft']) && $params['draft'] == true)
 		{
+			if(!$this->userroleIsAllowed($userrole, 'mycontent', 'read'))
+			{
+				$response->getBody()->write(json_encode([
+					'message' 	=> Translations::translate('You do not have enough rights.'),
+				]));
+
+				return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+			}
+
 			# if draft is explicitly requested
 			$markdown 		= $content->getDraftMarkdown($item);
 		}
@@ -326,10 +353,10 @@ class ControllerApiGlobals extends Controller
 		# if user is not allowed to perform this action (e.g. not admin)
 		if(!$this->userroleIsAllowed($request->getAttribute('c_userrole'), 'content', 'read'))
 		{
-			# then check if user is the owner of this content
+			# then check if user is allowed to see content
 			$meta = new Meta();
 			$metadata = $meta->getMetaData($item);
-			if(!$this->userIsAllowed($request->getAttribute('c_username'), $metadata))
+			if(!$this->contentIsAllowed($request->getAttribute('c_username'), $request->getAttribute('c_userrole'), $metadata))
 			{
 				$response->getBody()->write(json_encode([
 					'message' 	=> Translations::translate('You do not have enough rights.'),

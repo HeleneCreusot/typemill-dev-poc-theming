@@ -7,17 +7,30 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Routing\RouteContext;
 use Typemill\Models\User;
 use Typemill\Models\Validation;
-use Typemill\Models\SimpleMail;
+use Typemill\Models\Mail;
 use Typemill\Static\Translations;
 use Typemill\Extensions\ParsedownExtension;
 
 class ControllerWebRecover extends Controller
 {
+	protected function getAuthPageSettings(): array
+	{
+		return [
+			'authpagebgcolor'        => $this->settings['authpagebgcolor'] ?? '#0d9488',
+			'authpagetextcolor'      => $this->settings['authpagetextcolor'] ?? '#ffffff',
+			'authpagerightside'      => $this->settings['authpagerightside'] ?? true,
+			'authpagerightbg'        => $this->settings['authpagerightbg'] ?? '#ffffff',
+			'authpagerighttextcolor' => $this->settings['authpagerighttextcolor'] ?? '#000000',
+			'authpagerightcontent'   => $this->settings['authpagerightcontent'] ?? '',
+			'authpagestacked'        => $this->settings['authpagestacked'] ?? false,
+		];
+	}
+
 	public function showRecoverForm(Request $request, Response $response)
 	{
-	    return $this->c->get('view')->render($response, '/auth/recover.twig', [
-
-	    ]);
+	    return $this->c->get('view')->render($response, '/auth/recover.twig', array_merge([
+			'captcha' => $this->settings['authcaptcha'] ?? false,
+	    ], $this->getAuthPageSettings()));
 	}
 	
 	public function recoverPassword(Request $request, Response $response)
@@ -47,11 +60,12 @@ class ControllerWebRecover extends Controller
 			$recoverdate 					= date("Y-m-d H:i:s");
 			$recovertoken 					= bin2hex(random_bytes(32));
 
-			$url 	= $urlinfo['baseurl'] . '/tm/reset?username=' . $requiredUser['username'] . '&recovertoken=' . $recovertoken;
+			$baseUrl = !empty($settings['fqdn']) ? rtrim($settings['fqdn'], '/') : ($urlinfo['scheme'] . '://' . ($_SERVER['SERVER_NAME'] ?? $urlinfo['authority']) . $urlinfo['basepath']);
+			$url 	= rtrim($baseUrl, '/') . '/tm/reset?username=' . $requiredUser['username'] . '&recovertoken=' . $recovertoken;
 			$link 	= '<a href="'. $url . '">' . $url . '</a>';
 
 			# define the headers
-			$mail 		= new SimpleMail($settings);
+			$mail 		= new Mail($settings);
 
 			$subject 	= (isset($settings['recoversubject']) && ($settings['recoversubject'] != '') )  ? $settings['recoversubject'] : 'Recover your password';
 
@@ -92,10 +106,10 @@ class ControllerWebRecover extends Controller
 			\Typemill\Static\Helpers::addLogEntry('wrong input for password recovery');
 		}
 
-	    return $this->c->get('view')->render($response, '/auth/recoverconf.twig', [
-	    	'title' 	=> $title,
-	    	'message'	=> $message
-	    ]);
+    return $this->c->get('view')->render($response, '/auth/recoverconf.twig', array_merge([
+    	'title' 	=> $title,
+    	'message'	=> $message
+    ], $this->getAuthPageSettings()));
 	}
 
 	public function showPasswordResetForm(Request $request, Response $response, $args)
@@ -199,10 +213,10 @@ class ControllerWebRecover extends Controller
 			return $response->withHeader('Location', $this->routeParser->urlFor('auth.login'))->withStatus(302);
 		}
 
-	    return $this->c->get('view')->render($response, '/auth/reset.twig', [
-			'recovertoken' 	=> $params['recovertoken'],
-			'username' 		=> $requiredUser['username']
-	    ]);
+    return $this->c->get('view')->render($response, '/auth/reset.twig', array_merge([
+		'recovertoken' 	=> $params['recovertoken'],
+		'username' 		=> $requiredUser['username']
+    ], $this->getAuthPageSettings()));
 	}
 
 	public function resetPassword(Request $request, Response $response, $args)

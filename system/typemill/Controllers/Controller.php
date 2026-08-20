@@ -144,8 +144,8 @@ abstract class Controller
 
 			if(isset($field['type']) && ($field['type'] == 'select' ) )
 			{
-				# always add null as first option in selectboxes.
-				$options = [null => null];
+				# always add empty string as first option in selectboxes.
+				$options = ['' => ''];
 				
 				if(isset($field['options']) && is_array($field['options']))
 				{
@@ -211,6 +211,37 @@ abstract class Controller
 		}
 
 		return false;
+	}
+
+	# used for public api endpoints (apiGlobals)
+	protected function contentIsAllowed($username, $userrole, $pagemeta)
+	{
+		$allowedrole = !empty($pagemeta['meta']['allowedrole']) ? $pagemeta['meta']['allowedrole'] : null;		
+		$alloweduser = !empty($pagemeta['meta']['alloweduser']) ? $pagemeta['meta']['alloweduser'] : null;		
+
+		if($alloweduser)
+		{
+			$allowedusers = array_map('trim', explode(",", $alloweduser));
+			if(
+				in_array($username, $allowedusers)
+			)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		if($allowedrole)
+		{
+			if($userrole === $allowedrole || $this->c->get('acl')->inheritsRole($userrole, $allowedrole))
+			{
+				return true;
+			}
+		
+			return false;
+		}
+
+		return true;
 	}
 
 

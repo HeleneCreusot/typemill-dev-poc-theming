@@ -74,6 +74,8 @@ if(isset($settings['displayErrorDetails']) && $settings['displayErrorDetails'])
 {
 	$display_errors = 1;
 	ini_set('display_errors', $display_errors);
+	ini_set('display_startup_errors', 1);
+	error_reporting(E_ALL);
 }
 
 /****************************
@@ -237,6 +239,9 @@ if(isset($settings['projects']) && $settings['projects'] == 'languages')
 
 # add final settings to the container
 $container->set('settings', function() use ($settings){ return $settings; });
+
+# add mail service to the container so plugins can send mail via $this->container->get('mail')
+$container->set('mail', function() use ($settings){ return new \Typemill\Models\Mail($settings); });
 
 # dispatch the event onPluginsLoaded
 $dispatcher->dispatch(new OnPluginsLoaded($plugins), 'onPluginsLoaded');

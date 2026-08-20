@@ -105,21 +105,24 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($acl) {
 	$group->post('/prompt', ControllerApiKixote::class . ':prompt')->setName('api.kixote.prompt')->add(new ApiAuthorization($acl, 'mycontent', 'update')); # author
 	$group->post('/autotrans', ControllerApiKixote::class . ':autotrans')->setName('api.kixote.autotrans')->add(new ApiAuthorization($acl, 'mycontent', 'update')); # author
 	$group->put('/autotrans', ControllerApiKixote::class . ':autotransUpdate')->setName('api.kixote.autotransupdate')->add(new ApiAuthorization($acl, 'mycontent', 'update')); # author
+	$group->post('/kixote/help', ControllerApiKixote::class . ':help')->setName('api.kixote.help')->add(new ApiAuthorization($acl, 'mycontent', 'update')); # author
+	$group->post('/kixote/test', ControllerApiKixote::class . ':testConnection')->setName('api.kixote.test')->add(new ApiAuthorization($acl, 'user', 'update')); # admin only
+	$group->get('/kixote/models', ControllerApiKixote::class . ':getModels')->setName('api.kixote.models')->add(new ApiAuthorization($acl, 'mycontent', 'update')); # author
 
 	# Multilang
-	$group->get('/multilangindex', ControllerApiMultilang::class . ':getMultilangIndex')->setName('api.multilangindex.get')->add(new ApiAuthorization($acl, 'content', 'read'));
-	$group->get('/multilang', ControllerApiMultilang::class . ':getMultilang')->setName('api.multilang.get')->add(new ApiAuthorization($acl, 'content', 'read'));
-	$group->post('/multilang', ControllerApiMultilang::class . ':createMultilang')->setName('api.multilang.create')->add(new ApiAuthorization($acl, 'content', 'read'));
-	$group->delete('/multilang', ControllerApiMultilang::class . ':deleteMultilang')->setName('api.multilang.delete')->add(new ApiAuthorization($acl, 'content', 'read'));
+	$group->get('/multilangindex', ControllerApiMultilang::class . ':getMultilangIndex')->setName('api.multilangindex.get')->add(new ApiAuthorization($acl, 'mycontent', 'read')); # author
+	$group->get('/multilang', ControllerApiMultilang::class . ':getMultilang')->setName('api.multilang.get')->add(new ApiAuthorization($acl, 'mycontent', 'read')); # author;
+	$group->post('/multilang', ControllerApiMultilang::class . ':createMultilang')->setName('api.multilang.create')->add(new ApiAuthorization($acl, 'mycontent', 'read')); # author
+	$group->delete('/multilang', ControllerApiMultilang::class . ':deleteMultilang')->setName('api.multilang.delete')->add(new ApiAuthorization($acl, 'mycontent', 'read')); # author
 
 	# API USED ONLY EXTERNALLY
 	$group->get('/systemnavi', ControllerApiGlobals::class . ':getSystemnavi')->setName('api.systemnavi.get')->add(new ApiAuthorization($acl, 'account', 'read')); # member
 	$group->get('/mainnavi', ControllerApiGlobals::class . ':getMainnavi')->setName('api.mainnavi.get')->add(new ApiAuthorization($acl, 'account', 'read')); # member
-	$group->get('/navigation', ControllerApiGlobals::class . ':getNavigation')->setName('api.navigation.get')->add(new ApiAuthorization($acl, 'content', 'read')); # author
-	$group->get('/article/items', ControllerApiGlobals::class . ':getItemsForSlug')->setName('api.articleitems.get')->add(new ApiAuthorization($acl, 'content', 'read')); # author
-	$group->get('/article/item', ControllerApiGlobals::class . ':getItemForUrl')->setName('api.articleitem.get')->add(new ApiAuthorization($acl, 'content', 'read')); # author
-	$group->get('/article/content', ControllerApiGlobals::class . ':getArticleContent')->setName('api.articlecontent.get')->add(new ApiAuthorization($acl, 'content', 'read')); # author
-	$group->get('/article/meta', ControllerApiGlobals::class . ':getArticleMeta')->setName('api.articlemeta.get')->add(new ApiAuthorization($acl, 'content', 'read')); # author
+	$group->get('/navigation', ControllerApiGlobals::class . ':getNavigation')->setName('api.navigation.get')->add(new ApiAuthorization($acl, 'public', 'read')); # guest
+	$group->get('/article/items', ControllerApiGlobals::class . ':getItemsForSlug')->setName('api.articleitems.get')->add(new ApiAuthorization($acl, 'public', 'read')); # guest
+	$group->get('/article/item', ControllerApiGlobals::class . ':getItemForUrl')->setName('api.articleitem.get')->add(new ApiAuthorization($acl, 'public', 'read')); # guest
+	$group->get('/article/content', ControllerApiGlobals::class . ':getArticleContent')->setName('api.articlecontent.get')->add(new ApiAuthorization($acl, 'public', 'read')); # guest
+	$group->get('/article/meta', ControllerApiGlobals::class . ':getArticleMeta')->setName('api.articlemeta.get')->add(new ApiAuthorization($acl, 'public', 'read')); # guest
 
 })->add(new ApiAuthentication($settings));
 

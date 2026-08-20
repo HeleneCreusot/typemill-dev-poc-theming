@@ -65,6 +65,7 @@ class Validation
 		# checks if username is free when create new user
 		Validator::addRule('userAvailable', function($field, $value, array $params, array $fields) use ($user)
 		{
+			$value = $user->sanitizeUsername($value);
 			$activeUser 	= $user->setUser($value);
 			$inactiveUser 	= $user->setUser("_" . $value);
 			if($activeUser OR $inactiveUser){ return false; }
@@ -74,6 +75,7 @@ class Validation
 		# checks if user exists when userdata is updated
 		Validator::addRule('userExists', function($field, $value, array $params, array $fields) use ($user)
 		{
+			$value = $user->sanitizeUsername($value);
 			if($user->setUser($value)){ return true; }
 			return false;
 		}, 'does not exist');
@@ -108,7 +110,7 @@ class Validation
 					return false;
 				}
 
-				$keypattern 	= isset($params[0]['keypattern']) ? '/^' .  $params[0]['keypattern']  . '$/i' : '/^([a-z0-9])+$/i';
+				$keypattern 	= isset($params[0]['keypattern']) ? '/^' .  $params[0]['keypattern']  . '$/' : '/^([a-z0-9])+$/i';
 				if(preg_match($keypattern, $key) == false)
 				{
 		        	return false;
@@ -324,19 +326,15 @@ class Validation
 	public function authcode(array $params)
 	{
 		$v = new Validator($params);
-		$v->rule('required', ['username', 'code-1', 'code-2', 'code-3', 'code-4', 'code-5'])->message("Required");
+		$v->rule('required', ['username', 'authcode'])->message("Required");
 		$v->rule('alphaNum', 'username')->message("Invalid characters");
-		$v->rule('regex', 'code-1', '/^[0-9]{1}$/')->message("Must be 1-9");
-		$v->rule('regex', 'code-2', '/^[0-9]{1}$/')->message("Must be 1-9");
-		$v->rule('regex', 'code-3', '/^[0-9]{1}$/')->message("Must be 1-9");
-		$v->rule('regex', 'code-4', '/^[0-9]{1}$/')->message("Must be 1-9");
-		$v->rule('regex', 'code-5', '/^[0-9]{1}$/')->message("Must be 1-9");
-		
+		$v->rule('regex', 'authcode', '/^[0-9]{6}$/')->message("Must be 6 digits");
+
 		if($v->validate())
 		{
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -581,6 +579,7 @@ class Validation
 		
 		$v->rule('required', 'slug');
 		$v->rule('regex', 'slug', '/^[a-z0-9-]+$/i');
+		$v->rule('regex', 'project', '/^[a-z0-9-]+$/i');
 
 		if($v->validate())
 		{
@@ -973,8 +972,8 @@ class Validation
 			{
 				$fieldvalue = $input[$fieldname];
 
-				# fix false or null values for selectboxes
-				if($fielddefinitions['type'] == "select" && ($fieldvalue === 'NULL' OR $fieldvalue === false))
+				# fix false, null, or empty values for selectboxes
+				if($fielddefinitions['type'] == "select" && ($fieldvalue === 'NULL' OR $fieldvalue === false OR $fieldvalue === ''))
 				{ 
 					$fieldvalue = NULL; 
 				}

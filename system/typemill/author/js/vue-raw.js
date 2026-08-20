@@ -2,6 +2,14 @@ const raweditor = Vue.createApp({
 	template: `<fieldset v-if="showraw" class="lg:px-12 py-8 bg-stone-50 dark:bg-stone-700 dark:text-stone-200 shadow-md mb-16">
 					<div class="absolute top-0 right-0">
 						<button 
+							v-if="aiconfigured"
+							@click.prevent="openkixotehelp()"
+							class="mr-1 px-2 py-2 bg-stone-50 border-b-2 border-stone-50 hover:bg-stone-200 dark:text-stone-200 dark:bg-stone-700 dark:border-stone-600 hover:dark:bg-stone-200 hover:dark:text-stone-900 transition duration-100"
+						>
+							<svg class="icon icon-question"><use xlink:href="#icon-question"></use></svg>
+						</button>
+						<button 
+							v-if="aiconfigured"
 							@click.prevent="openkixoteai()"
 							class="mr-1 px-2 py-2 bg-stone-50 border-b-2 border-stone-50 hover:bg-stone-200 dark:text-stone-200 dark:bg-stone-700 dark:border-stone-600 hover:dark:bg-stone-200 hover:dark:text-stone-900 transition duration-100"
 						>
@@ -61,6 +69,7 @@ const raweditor = Vue.createApp({
 			showraw: true,
 			editorsize: false,	
 			showmedialib: false,
+			aiconfigured: data.aiconfigured,
 		}
 	},
 	components: {
@@ -83,7 +92,11 @@ const raweditor = Vue.createApp({
 		openkixoteai()
 		{
 			eventBus.$emit('startAi');
-		},		
+		},
+		openkixotehelp()
+		{
+			eventBus.$emit('startHelp');
+		},
 		openmedialib()
 		{
 			this.showmedialib = true;
